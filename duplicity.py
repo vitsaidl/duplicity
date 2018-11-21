@@ -16,6 +16,7 @@ import os
 def nahrajSoubor(*args):
     jmenoNactenehoSouboru =filedialog.askopenfilename(initialdir = os.path.dirname(os.path.realpath(__file__)) ,title = "Výběr souboru", filetypes = (("csv soubory","*.csv"),("txt soubory","*.txt"), ("Všechny soubory","*.*")))
     hodnotaHlavickyCombobox = comboboxHlavicka.get()    #nacteni informace o tom, kde je hlavicka souboru
+    hodnotaKodovaniComboboxu = comboboxKodovani.get()   #nacteni informace o pouzitem kodovani zkoumaneho souboru
     separator = comboboxSeparator.get()                 #nacteni separatoru oddelujiciho sloupce
     global nactenaTabulka                               #nactenaTabulka je globalni promenna, tj. jeji zmeny v teto funkci se projevi i vne funkce
     
@@ -54,7 +55,7 @@ def nahrajSoubor(*args):
             jmenaSloupcu = stringJmenSloupcu.split(",")               #string rozdelime podle carky a vlozime do listu
             jmenaSloupcu = list(map(str.strip,jmenaSloupcu))          #z okraju kusu stringu usekneme bile znaky (map fce uplatnuje split individualne na kazdy prvek listu)
         
-        nactenaTabulka = pd.read_csv(jmenoNactenehoSouboru, names = jmenaSloupcu, header = hlavickaNastaveni, sep = separator)  #nyni dochazi k nacteni souboru
+        nactenaTabulka = pd.read_csv(jmenoNactenehoSouboru, names = jmenaSloupcu, header = hlavickaNastaveni, sep = separator, encoding = hodnotaKodovaniComboboxu)  #nyni dochazi k nacteni souboru
         report = "Počet řádků tabulky je {}\n".format(len(nactenaTabulka))    #vytvareji se promenne pro report
         for sloupec in nactenaTabulka.columns:
             report = report + "Počet unikátních hodnot sloupce {}: {}\n".format(sloupec, (nactenaTabulka[sloupec]).nunique())
@@ -136,7 +137,7 @@ def vygenerujVysledek(*args):
     if (separatorCombobox == "mezera"): separatorVystup = " "                #mapping nazvu specialnich separatoru z combobosu na realny separator - zde obycejnou mezeru
     elif (separatorCombobox == "tabulátor"): separatorVystup = "\t"          #a zde na tabulator
     else: separatorVystup = separatorCombobox
-    vysledek.to_csv(os.path.dirname(os.path.realpath(__file__)) + "\\vysledek_hledani.csv", sep =separatorVystup)  #a ulozime soubor s nimi do stejneho adresare, jako je tento program
+    vysledek.to_csv(os.path.dirname(os.path.realpath(__file__)) + "\\vysledek_hledani.csv", sep =separatorVystup, encoding = comboboxKodovani.get())  #a ulozime soubor s nimi do stejneho adresare, jako je tento program
 
 #globalni promenne (nevim totiz, jak je rozumne dostat z okenich funkci)
 sloupceNaPridani = []
@@ -158,63 +159,69 @@ comboboxSeparator = ttk.Combobox(mainframe, values = [",", ".", ";", ":", "|", "
 comboboxSeparator.grid(column=0, row=0, sticky =tk.E)
 comboboxSeparator.set(",")
 
+labelKodovani = ttk.Label(mainframe, text= "Kódování")
+labelKodovani.grid(column=0, row=1, sticky =tk.W)
+comboboxKodovani = ttk.Combobox(mainframe, values = ["utf8", "windows-1250"])
+comboboxKodovani.grid(column=0, row=1, sticky =tk.E)
+comboboxKodovani.set("utf8")                                #nastaveni defaultni hodnoty
+
 labelHlavicka = ttk.Label(mainframe, text= "Hlavička")
-labelHlavicka.grid(column=0, row=1, sticky =tk.W)
+labelHlavicka.grid(column=0, row=2, sticky =tk.W)
 comboboxHlavicka = ttk.Combobox(mainframe, values = ["Není", "Na prvním řádku", "Zadá se ručně"])
-comboboxHlavicka.grid(column=0, row=1, sticky =tk.E)
-comboboxHlavicka.set("Na prvním řádku")
+comboboxHlavicka.grid(column=0, row=2, sticky =tk.E)
+comboboxHlavicka.set("Na prvním řádku")                   #nastaveni defaultni hodnoty
 
 labelRucniHlavicka = ttk.Label(mainframe, text= "Custom hlavička - názvy sloupců oddělujte čárkou")
-labelRucniHlavicka.grid(column=0, row=2)
+labelRucniHlavicka.grid(column=0, row=3)
 oblastRucniHlavicka = tk.Text(mainframe, height = 1, width = 80)     #tato sirka realne urcuje sirku okna
-oblastRucniHlavicka.grid(column=0, row=3)
+oblastRucniHlavicka.grid(column=0, row=4)
 
 tlacitkoNahrajSoubor = ttk.Button(mainframe, text= "Nahrání souboru", command = nahrajSoubor)
-tlacitkoNahrajSoubor.grid(column=0, row=4)
+tlacitkoNahrajSoubor.grid(column=0, row=5)
 
 labelOblastiShrnuti = ttk.Label(mainframe, text = "Shrnutí")
-labelOblastiShrnuti.grid(column = 0, row = 5)
+labelOblastiShrnuti.grid(column = 0, row = 6)
 oblastShrnuti = tk.Text(mainframe, height = 8, width = 80)
 oblastShrnuti.config(state=tk.DISABLED)
-oblastShrnuti.grid(column = 0, row = 6, sticky =tk.W)
+oblastShrnuti.grid(column = 0, row = 7, sticky =tk.W)
 
 labelPridaniKontrolaDuplicit = ttk.Label(mainframe, text = "Přidat do seznamu")
-labelPridaniKontrolaDuplicit.grid(column = 0, row = 7, sticky =tk.W)
+labelPridaniKontrolaDuplicit.grid(column = 0, row = 8, sticky =tk.W)
 comboboxPridaniKontrolaDuplicit = ttk.Combobox(mainframe, state = "readonly")
-comboboxPridaniKontrolaDuplicit.grid(column=0, row=8, sticky =tk.W)
+comboboxPridaniKontrolaDuplicit.grid(column=0, row=9, sticky =tk.W)
 tlacitkoPridejSloupec = ttk.Button(mainframe, text= "Přidej sloupec", command = pridejSloupec, state = tk.DISABLED)
-tlacitkoPridejSloupec.grid(column=0, row=9, sticky =tk.W)
+tlacitkoPridejSloupec.grid(column=0, row=10, sticky =tk.W)
 
 labelSeznamSloupcuDuplicity = ttk.Label(mainframe, text = "Sloupce tvořících subtabulku zkoumanou kvůli duplicitám")
-labelSeznamSloupcuDuplicity.grid(column = 0, row = 7)
+labelSeznamSloupcuDuplicity.grid(column = 0, row = 8)
 comboboxSeznamSloupcuDuplicity  = ttk.Combobox(mainframe, state = "readonly")
-comboboxSeznamSloupcuDuplicity.grid(column=0, row=8)
+comboboxSeznamSloupcuDuplicity.grid(column=0, row=9)
 
 labelOdebraniKontrolaDuplicit = ttk.Label(mainframe, text = "Odebrat ze seznamu")
-labelOdebraniKontrolaDuplicit.grid(column = 0, row = 7, sticky =tk.E)
+labelOdebraniKontrolaDuplicit.grid(column = 0, row = 8, sticky =tk.E)
 comboboxOdebraniKontrolaDuplicit = ttk.Combobox(mainframe, state = "readonly")
-comboboxOdebraniKontrolaDuplicit.grid(column=0, row=8, sticky =tk.E)
+comboboxOdebraniKontrolaDuplicit.grid(column=0, row=9, sticky =tk.E)
 tlacitkoOdeberSloupec = ttk.Button(mainframe, text= "Odeber sloupec", command = odeberSloupec, state = tk.DISABLED)
-tlacitkoOdeberSloupec.grid(column=0, row=9, sticky =tk.E)
+tlacitkoOdeberSloupec.grid(column=0, row=10, sticky =tk.E)
 
 labelCoPatriDoDuplicity = ttk.Label(mainframe, text = "Duplicitou míníme")
-labelCoPatriDoDuplicity.grid(column = 0, row = 10)
+labelCoPatriDoDuplicity.grid(column = 0, row = 11)
 coJeDuplicita = tk.IntVar()    #specialni tkinterovska promenna svazujici dva radiobuttony
 radiobuttonCoPatriDoDuplicity = ttk.Radiobutton(mainframe, text = "Druhý a další výskyty určité hodnoty", variable = coJeDuplicita, value = 1)
-radiobuttonCoPatriDoDuplicity.grid(column=0, row=11)
-radiobuttonCoPatriDoDuplicity = ttk.Radiobutton(mainframe, text = "Všechny výskyty určité hodnoty (včetně prvního)", variable = coJeDuplicita, value = 2)
 radiobuttonCoPatriDoDuplicity.grid(column=0, row=12)
+radiobuttonCoPatriDoDuplicity = ttk.Radiobutton(mainframe, text = "Všechny výskyty určité hodnoty (včetně prvního)", variable = coJeDuplicita, value = 2)
+radiobuttonCoPatriDoDuplicity.grid(column=0, row=13)
 
 labelCoChceme = ttk.Label(mainframe, text = "Chceme")
-labelCoChceme.grid(column = 0, row = 13)
+labelCoChceme.grid(column = 0, row = 14)
 coChceme = tk.IntVar()
 radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Unikátní řádky", variable = coChceme, value = 1)
-radiobuttonCoChceme.grid(column=0, row=14)
-radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Duplicitní řádky", variable = coChceme, value = 2)
 radiobuttonCoChceme.grid(column=0, row=15)
+radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Duplicitní řádky", variable = coChceme, value = 2)
+radiobuttonCoChceme.grid(column=0, row=16)
 
 tlacitkoVygenerujVysledek = ttk.Button(mainframe, text= "Vygeneruj výsledný soubor", command = vygenerujVysledek, state = tk.DISABLED)
-tlacitkoVygenerujVysledek.grid(column=0, row=16)
+tlacitkoVygenerujVysledek.grid(column=0, row=17)
 
 root.mainloop()  
 
