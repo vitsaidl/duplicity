@@ -34,11 +34,13 @@ def nahrajSoubor(*args):
         sloupceNaOdebrani = []
         nactenaTabulka = ""                                                  #smaze se pandi dataset
         comboboxPridaniKontrolaDuplicit["values"] = sloupceNaPridani         #promazou se comboboxy nactenim prazdnych listu
-        comboboxSeznamSloupcuDuplicity["values"] = sloupceNaDuplicitu
+        listboxSeznamSloupcuDuplicity.delete(0, tk.END)                      #promazani listboxu
+        listboxSeznamSloupcuDuplicity.insert(tk.END, *sloupceNaDuplicitu)    #a nacteni prvku z listu, prvni parametr rika, odkud se zacina, druhy je typu *args
         comboboxOdebraniKontrolaDuplicit["values"] = sloupceNaOdebrani
         oblastShrnuti.config(state=tk.NORMAL)                                #textove pole por report se otevre pro upravy
         oblastShrnuti.delete("1.0", tk.END)                                  #a nasledne se jeho obsah od zacatku (1.0) do konce (tk.END) vymaze
         oblastShrnuti.config(state=tk.DISABLED)                              #a textove pole se zavre pro upravy
+        comboboxOdebraniKontrolaDuplicit.set("")                             #vymazani aktivniho stringu prislusejiciho k predchozimu nactenemu souboru v comboboxu na odebirani sloupcu
         
         if (separator == "mezera"): separator = "\s+"         #mapping nazvu specialnich separatoru z combobosu na realny separator
         elif (separator == "tabulátor"): separator = "\t"
@@ -85,7 +87,8 @@ def pridejSloupec(*args):   #funkce pridavajici sloupec do seznamu, na zaklade k
     sloupceNaDuplicitu.append(jmenoSloupce)                                  #aby se pridala do dalsich dvou listu
     sloupceNaOdebrani.append(jmenoSloupce) 
     comboboxPridaniKontrolaDuplicit["values"] = sloupceNaPridani             #comboboxy se nasledne preplni odpovidajicimi listy
-    comboboxSeznamSloupcuDuplicity["values"] = sloupceNaDuplicitu
+    listboxSeznamSloupcuDuplicity.delete(0, tk.END)                          #promazani listboxu
+    listboxSeznamSloupcuDuplicity.insert(tk.END, *sloupceNaDuplicitu)        #a nacteni prvku z listu, prvni parametr rika, odkud se zacina, druhy je typu *args
     comboboxOdebraniKontrolaDuplicit["values"] = sloupceNaOdebrani
     
     tlacitkoOdeberSloupec.config(state = tk.NORMAL)                          #enabluj tlacitka na odebirani sloupcu 
@@ -107,7 +110,8 @@ def odeberSloupec(*args): #funkce odebirajici sloupec ze seznamu, na zaklade kte
     sloupceNaDuplicitu.remove(jmenoSloupce)                                  #aby se odebrala z dvou dalsich listu
     sloupceNaOdebrani.remove(jmenoSloupce)
     comboboxPridaniKontrolaDuplicit["values"] = sloupceNaPridani             #comboboxy se nasledne preplni odpovidajicimi listy
-    comboboxSeznamSloupcuDuplicity["values"] = sloupceNaDuplicitu
+    listboxSeznamSloupcuDuplicity.delete(0, tk.END)                          #promazani listboxu
+    listboxSeznamSloupcuDuplicity.insert(tk.END, *sloupceNaDuplicitu)        #a nacteni prvku z listu, prvni parametr rika, odkud se zacina, druhy je typu *args
     comboboxOdebraniKontrolaDuplicit["values"] = sloupceNaOdebrani
     
     tlacitkoPridejSloupec.config(state = tk.NORMAL)                          #enabluj tlacitko na pridani sloupcu 
@@ -133,11 +137,16 @@ def vygenerujVysledek(*args):
         listBooleanu = [not x for x in listBooleanu]                         #tak musime ze vsech true udelat false a naopak
     
     vysledek = nactenaTabulka[listBooleanu]                                  #nakonec z datasetu vybereme radky, ktere jsou podle listu booleanu true
+    vysledek.rename(index = lambda x: x+1, inplace = True)                   #z indexu (ktere zacinaji nulou) delame cisla radku (ktere zacinaji jednickou)
     separatorCombobox = comboboxSeparator.get()                              #vezmeme hodnotu separatoru z comboboxu
     if (separatorCombobox == "mezera"): separatorVystup = " "                #mapping nazvu specialnich separatoru z combobosu na realny separator - zde obycejnou mezeru
     elif (separatorCombobox == "tabulátor"): separatorVystup = "\t"          #a zde na tabulator
     else: separatorVystup = separatorCombobox
-    vysledek.to_csv(os.path.dirname(os.path.realpath(__file__)) + "\\vysledek_hledani.csv", sep =separatorVystup, encoding = comboboxKodovani.get())  #a ulozime soubor s nimi do stejneho adresare, jako je tento program
+    jmenoVystupnihoSouboru = os.path.dirname(os.path.realpath(__file__)) + "\\vysledek_hledani.csv"
+    pouzitIndex = True                                                       #defaultni hodnota ukazovani cisla radku (resp. indexu; zde je to to same)
+    if(checkBoxIndex.state() != ('selected',)):  pouzitIndex = False         #pokud neni zatrzen checkbox, nebude se ukladat index radku 
+    vysledek.to_csv(jmenoVystupnihoSouboru, sep =separatorVystup, encoding = comboboxKodovani.get(), index = pouzitIndex)  #a ulozime soubor s nimi do stejneho adresare, jako je tento program
+    messagebox.showinfo("Info", "Soubor uložen do \n" + jmenoVystupnihoSouboru)
 
 #globalni promenne (nevim totiz, jak je rozumne dostat z okenich funkci)
 sloupceNaPridani = []
@@ -155,21 +164,24 @@ mainframe.rowconfigure(0, weight=1)
 
 labelSeparator = ttk.Label(mainframe, text= "Volba separátoru sloupců")
 labelSeparator.grid(column=0, row=0, sticky =tk.W)
-comboboxSeparator = ttk.Combobox(mainframe, values = [",", ".", ";", ":", "|", "/", "\\", "mezera", "tabulátor"], state= "readonly")
+hodnotySeparatoru = [",", ".", ";", ":", "|", "/", "\\", "mezera", "tabulátor"]
+comboboxSeparator = ttk.Combobox(mainframe, values = hodnotySeparatoru, state= "readonly")
 comboboxSeparator.grid(column=0, row=0, sticky =tk.E)
-comboboxSeparator.set(",")
+comboboxSeparator.set(hodnotySeparatoru[0])
 
 labelKodovani = ttk.Label(mainframe, text= "Kódování")
 labelKodovani.grid(column=0, row=1, sticky =tk.W)
-comboboxKodovani = ttk.Combobox(mainframe, values = ["utf8", "windows-1250"])
+hodnotyKodovani = ["utf8", "windows-1250"]
+comboboxKodovani = ttk.Combobox(mainframe, values = hodnotyKodovani)
 comboboxKodovani.grid(column=0, row=1, sticky =tk.E)
-comboboxKodovani.set("utf8")                                #nastaveni defaultni hodnoty
+comboboxKodovani.set(hodnotyKodovani[0])                                #nastaveni defaultni hodnoty
 
 labelHlavicka = ttk.Label(mainframe, text= "Hlavička")
 labelHlavicka.grid(column=0, row=2, sticky =tk.W)
-comboboxHlavicka = ttk.Combobox(mainframe, values = ["Není", "Na prvním řádku", "Zadá se ručně"])
+hodnotyHlavicka = ["Není", "Na prvním řádku", "Zadá se ručně"]
+comboboxHlavicka = ttk.Combobox(mainframe, values = hodnotyHlavicka)
 comboboxHlavicka.grid(column=0, row=2, sticky =tk.E)
-comboboxHlavicka.set("Na prvním řádku")                   #nastaveni defaultni hodnoty
+comboboxHlavicka.set(hodnotyHlavicka[1])                   #nastaveni defaultni hodnoty
 
 labelRucniHlavicka = ttk.Label(mainframe, text= "Custom hlavička - názvy sloupců oddělujte čárkou")
 labelRucniHlavicka.grid(column=0, row=3)
@@ -194,8 +206,8 @@ tlacitkoPridejSloupec.grid(column=0, row=10, sticky =tk.W)
 
 labelSeznamSloupcuDuplicity = ttk.Label(mainframe, text = "Sloupce tvořících subtabulku zkoumanou kvůli duplicitám")
 labelSeznamSloupcuDuplicity.grid(column = 0, row = 8)
-comboboxSeznamSloupcuDuplicity  = ttk.Combobox(mainframe, state = "readonly")
-comboboxSeznamSloupcuDuplicity.grid(column=0, row=9)
+listboxSeznamSloupcuDuplicity  = tk.Listbox(mainframe)
+listboxSeznamSloupcuDuplicity.grid(column=0, row=9)
 
 labelOdebraniKontrolaDuplicit = ttk.Label(mainframe, text = "Odebrat ze seznamu")
 labelOdebraniKontrolaDuplicit.grid(column = 0, row = 8, sticky =tk.E)
@@ -220,8 +232,13 @@ radiobuttonCoChceme.grid(column=0, row=15)
 radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Duplicitní řádky", variable = coChceme, value = 2)
 radiobuttonCoChceme.grid(column=0, row=16)
 
+checkBoxIndex = ttk.Checkbutton(mainframe, text = "Vložit do výsledného souboru čísla řádků")
+checkBoxIndex.state(['!alternate'])                                    #aby se z checkboxu vymazal mezistav (ani zatrzene, ani nezatrzene)
+checkBoxIndex.state(['selected'])                                      #aby se checkbox natvrdo nastavil do unchecked modu; bez predchoziho by to nefungovalo
+checkBoxIndex.grid(column = 0, row = 17)
+
 tlacitkoVygenerujVysledek = ttk.Button(mainframe, text= "Vygeneruj výsledný soubor", command = vygenerujVysledek, state = tk.DISABLED)
-tlacitkoVygenerujVysledek.grid(column=0, row=17)
+tlacitkoVygenerujVysledek.grid(column=0, row=18)
 
 root.mainloop()  
 
