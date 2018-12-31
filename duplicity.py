@@ -138,6 +138,7 @@ def vygenerujVysledek(*args):
     
     vysledek = nactenaTabulka[listBooleanu]                                  #nakonec z datasetu vybereme radky, ktere jsou podle listu booleanu true
     vysledek.rename(index = lambda x: x+1, inplace = True)                   #z indexu (ktere zacinaji nulou) delame cisla radku (ktere zacinaji jednickou)
+    if(coChceme2.get() == 2): vysledek = vysledek[sloupceNaDuplicitu]        #pokud uzivatel zatrhl, ze chce mit ve vysledku jen sloupce pouzite pri urceni duplicit
     separatorCombobox = comboboxSeparator.get()                              #vezmeme hodnotu separatoru z comboboxu
     if (separatorCombobox == "mezera"): separatorVystup = " "                #mapping nazvu specialnich separatoru z combobosu na realny separator - zde obycejnou mezeru
     elif (separatorCombobox == "tabulátor"): separatorVystup = "\t"          #a zde na tabulator
@@ -219,6 +220,7 @@ tlacitkoOdeberSloupec.grid(column=0, row=10, sticky =tk.E)
 labelCoPatriDoDuplicity = ttk.Label(mainframe, text = "Duplicitou míníme")
 labelCoPatriDoDuplicity.grid(column = 0, row = 11)
 coJeDuplicita = tk.IntVar()    #specialni tkinterovska promenna svazujici dva radiobuttony
+coJeDuplicita.set(1)           #nastaveni defaultni hodnoty na jednicku, coz odpovida volbe "Druhy a dalsi vyskyty..."
 radiobuttonCoPatriDoDuplicity = ttk.Radiobutton(mainframe, text = "Druhý a další výskyty určité hodnoty", variable = coJeDuplicita, value = 1)
 radiobuttonCoPatriDoDuplicity.grid(column=0, row=12)
 radiobuttonCoPatriDoDuplicity = ttk.Radiobutton(mainframe, text = "Všechny výskyty určité hodnoty (včetně prvního)", variable = coJeDuplicita, value = 2)
@@ -227,18 +229,28 @@ radiobuttonCoPatriDoDuplicity.grid(column=0, row=13)
 labelCoChceme = ttk.Label(mainframe, text = "Chceme")
 labelCoChceme.grid(column = 0, row = 14)
 coChceme = tk.IntVar()
+coChceme.set(2)                              #nastaveni defaultni hodnoty na dvojku, coz odpovida volbe "Duplicitni radky"
 radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Unikátní řádky", variable = coChceme, value = 1)
 radiobuttonCoChceme.grid(column=0, row=15)
 radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Duplicitní řádky", variable = coChceme, value = 2)
 radiobuttonCoChceme.grid(column=0, row=16)
 
+labelCoChceme = ttk.Label(mainframe, text = "Výsledný soubor by měly tvořit")
+labelCoChceme.grid(column = 0, row = 17)
+coChceme2 = tk.IntVar()
+coChceme2.set(1)                                #nastaveni defaultni hodnoty na jednicku, coz odpovida volbe "Vsechny sloupce"
+radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Všechny sloupce", variable = coChceme2, value = 1)
+radiobuttonCoChceme.grid(column=0, row=18)
+radiobuttonCoChceme = ttk.Radiobutton(mainframe, text = "Jen sloupce vybrané pro určení duplicit", variable = coChceme2, value = 2)
+radiobuttonCoChceme.grid(column=0, row=19)
+
 checkBoxIndex = ttk.Checkbutton(mainframe, text = "Vložit do výsledného souboru čísla řádků")
 checkBoxIndex.state(['!alternate'])                                    #aby se z checkboxu vymazal mezistav (ani zatrzene, ani nezatrzene)
 checkBoxIndex.state(['selected'])                                      #aby se checkbox natvrdo nastavil do unchecked modu; bez predchoziho by to nefungovalo
-checkBoxIndex.grid(column = 0, row = 17)
+checkBoxIndex.grid(column = 0, row = 20)
 
 tlacitkoVygenerujVysledek = ttk.Button(mainframe, text= "Vygeneruj výsledný soubor", command = vygenerujVysledek, state = tk.DISABLED)
-tlacitkoVygenerujVysledek.grid(column=0, row=18)
+tlacitkoVygenerujVysledek.grid(column=0, row=21)
 
 root.mainloop()  
 
