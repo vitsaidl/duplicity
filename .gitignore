@@ -1,2 +1,3 @@
 environment
 duplicity_result.csv
+.mypy_cache

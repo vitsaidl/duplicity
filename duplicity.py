@@ -48,6 +48,7 @@ def _get_header_location(header_location_combo: str) -> Union[int, None]:
         int/None: Either 0 or None - params in this forms expected \
         by pandas function
     """
+    header_location: Union[int, None]
     if header_location_combo in ["On first row", "Manual input"]:
         header_location = 0
     elif header_location_combo == "Doesn't exist":
@@ -327,6 +328,7 @@ def generate_result_file(file_content: ExaminedData) -> None:
     Args:
         file_content(ExaminedData): Contains info about loaded file
     """
+    duplicity_flag: Union[str, bool]
     if var_duplicity_def.get() == 1:
         duplicity_flag = "first"
     else:
