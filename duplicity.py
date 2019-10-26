@@ -56,17 +56,17 @@ def _get_header_location(header_location_combo: str) -> Union[int, None]:
     return header_location
 
 
-def _get_user_col_names() -> List[str]:
+def _get_user_col_names(cust_col_names: str) -> List[str]:
     """Parse content of text area for custom column names and return the names in \
     form of list
+
+    Args:
+        cust_col_names (str): Custom columns names separated by comma
 
     Returns:
         list[str]: Columns names given by an user
     """
-    string_col_names = textfield_custom_header.get(
-        START_TEXT_AREA, END_TEXT_AREA
-    )
-    column_names = string_col_names.split(",")
+    column_names = cust_col_names.split(",")
     column_names = list(map(str.strip, column_names))
     return column_names
 
@@ -84,7 +84,10 @@ def _get_column_names(header_location_combo: str) -> Union[None, List[str]]:
     if header_location_combo in ["On first row", "Doesn't exist"]:
         column_names = None
     elif header_location_combo == "Manual input":
-        column_names = _get_user_col_names()
+        string_col_names = textfield_custom_header.get(
+            START_TEXT_AREA, END_TEXT_AREA
+        )
+        column_names = _get_user_col_names(string_col_names)
     return column_names
 
 
@@ -134,7 +137,8 @@ class ExaminedData:
 
         Args:
             file_name (str): File containing data
-            columns_names (None/List[str]): Column names or None (if absent)
+            columns_names (None/List[str]): Column names or None (if absent or
+            in file)
             header_location(None/int): Either None or 0 (header on 1st line)
             columns_separator(str): Char(s) separating individual columns
             file_encoding(str): File encoding
@@ -181,7 +185,12 @@ class ExaminedData:
         self.evalued_columns.remove(column_name)
         self.nonevalued_columns.append(column_name)
 
-    def get_result_table(self, duplicity_def, want_uniques, only_chosen_cols):
+    def get_result_table(
+        self,
+        duplicity_def: Union[bool, str],
+        want_uniques: int,
+        only_chosen_cols: int,
+    ) -> pd.DataFrame:
         """Create result table based on loaded table and user specifications
 
         Args:
@@ -192,6 +201,9 @@ class ExaminedData:
             table (0) or we want only unique values (1)
             only_chosen_cols(int): Either we want all columns in result
             table (0) or we want only specified columns (1)
+
+        Returns:
+            pandas.DataFrame: Subset of loaded table
         """
         is_duplicity_row = self.loaded_table.duplicated(
             subset=self.evalued_columns, keep=duplicity_def

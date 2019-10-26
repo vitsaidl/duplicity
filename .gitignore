@@ -1,3 +1,7 @@
 environment
 duplicity_result.csv
 .mypy_cache
+__pycache__
+tests/__pycache__
+tests/examined_data/__pycache__
+.coverage
